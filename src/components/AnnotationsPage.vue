@@ -22,13 +22,12 @@
               />
             </b-nav-form>
             <b-nav-item right>
+              <!-- v-on:click="delete_empty_document()" v-download-data:type="'text/json'" -->
               <b-button
                 :size="'sm'"
                 :variant="'primary'"
-                v-on:click="delete_empty_document()"
                 v-download-data="valid_json"
-                v-download-data:type="'json'"
-                v-download-data:filename="'cdqa-v1.1.json'"
+                v-download-data:filename="'export.json'"
               >Download</b-button>
             </b-nav-item>
           </b-navbar-nav>
@@ -43,13 +42,17 @@
       >Paragraph {{ context_number }} of {{ json.data[data_number - 1].paragraphs.length }} | Document {{ data_number }} of {{ json.data.length }}</span>
       <br>
       <br>
-      <p ref="paragraph" v-selection.fix="{getSelection:getSelection}">{{ paragraph_context }}</p>
+
+      <p style="white-space: pre-line;" ref="paragraph" v-selection.fix="{getSelection:getSelection}">{{ paragraph_context }}</p>
       <br>
 
       <b-form-input v-model="question" type="text" placeholder="Type question here..."></b-form-input>
       <br>
 
-      <b-form-input v-model="answer" type="text" placeholder="Type answer here..."></b-form-input>
+      <b-form-input v-model="answer" type="text" disabled placeholder="answer..."></b-form-input>
+      <br>
+
+      <b-form-input v-model="answer_start" type="text" disabled placeholder="answer start position..."></b-form-input>
       <br>
 
       <b-button :size="''" :variant="'secondary'" v-on:click="addAnnotation()">Add annotation</b-button> or 
@@ -108,21 +111,6 @@
     </div>
     <div v-else>
       There are no more data to annotate. You can now download your annotated dataset
-      <img
-        src="../assets/ablobmaracas.gif"
-        height="30"
-        width="30"
-      >
-      <br>
-      <br>
-      <b-button
-        :size="''"
-        :variant="'primary'"
-        v-on:click="delete_empty_document()"
-        v-download-data="valid_json"
-        v-download-data:type="'json'"
-        v-download-data:filename="'cdqa-v1.1.json'"
-      >Download</b-button>
     </div>
   </div>
 </template>
@@ -140,6 +128,7 @@ export default {
       context_number: 1,
       question: "",
       answer: "",
+      answer_start: "",
       fields: ["Questions", "Answers", "Edit"],
       query: ""
     };
@@ -164,8 +153,10 @@ export default {
       ];
       paragraph_container.qas.splice(row_index, 1);
     },
-    getSelection: function(fixStr) {
-      this.answer = fixStr;
+    getSelection: function() {
+      const selection = window.getSelection();
+      this.answer_start = selection.baseOffset;
+      this.answer = selection.toString();
     },
     delete_paragraph: function() {
       var paragraph_container = this.json.data[this.data_number - 1].paragraphs;
@@ -181,11 +172,10 @@ export default {
   },
   computed: {
     valid_json: function() {
-      var json = JSON.stringify(this.json).replace(/[\u007F-\uFFFF]/g, function(
-        chr
-      ) {
-        return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4);
-      });
+      var json = JSON.stringify(this.json, undefined, 2)
+        .replace(/[\u007F-\uFFFF]/g, function(chr) {
+          return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4);
+        });
       return json;
     },
     autocomplete: function() {
@@ -213,9 +203,6 @@ export default {
       return this.json.data[this.data_number - 1].paragraphs[
         this.context_number - 1
       ].context;
-    },
-    answer_start: function() {
-      return this.paragraph_context.indexOf(this.answer);
     },
     options() {
       return {
