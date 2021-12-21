@@ -109,9 +109,7 @@ export default {
   },
   methods: {
     addAnnotation: function() {
-      var paragraph_container = this.json.data[this.data_number].paragraphs[
-        this.context_number - 1
-      ];
+      var paragraph_container = this.json.data[this.data_number].paragraphs[this.context_number];
       var qa = {
         question: this.question,
         id: uuidv4(),
