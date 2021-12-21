@@ -6,23 +6,27 @@ A web-based annotator for closed-domain question answering datasets with SQuAD f
 
 ![](https://cdqa-suite.github.io/cdQA-website/img/suite-3.5c84e524.png)
 
-Clone the repository:
+# Installation:
 
-```shell
+```
+# Download
 git clone https://github.com/cdqa-suite/cdQA-annotator
-```
-
-Install dependencies
-
-```shell
 cd cdQA-annotator
-npm install
 ```
 
-Start development server
-
+## npm
 ```shell
+# Install dependencies
+npm install
+
+# Start development server
 npm run serve
+```
+
+## Docker
+```
+docker build . -t cdqa-annotator
+docker run cdqa-annotator -p 8080:8080
 ```
 
 The app should be running at http://localhost:8080/
