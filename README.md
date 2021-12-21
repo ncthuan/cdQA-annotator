@@ -10,7 +10,7 @@ A web-based annotator for closed-domain question answering datasets with SQuAD f
 
 ```
 # Download
-git clone https://github.com/cdqa-suite/cdQA-annotator
+git clone https://github.com/ncthuan/cdQA-annotator
 cd cdQA-annotator
 ```
 
