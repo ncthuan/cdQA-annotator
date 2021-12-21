@@ -9,22 +9,26 @@
         <b-collapse id="nav-collapse" is-nav>
           <!-- Right aligned nav items -->
           <b-navbar-nav class="ml-auto">
+            <!--
             <b-nav-item>
               <svg-progress-bar :value="data_number / json.data.length * 100" :options="options"></svg-progress-bar>
             </b-nav-item>
+            -->
             <b-nav-form>
+              <div style="margin-right: 8px">
+                <b-button :variant="'outline-secondary'" v-on:click="prev">Previous</b-button>
+                <b-button :variant="'outline-secondary'" v-on:click="next">Next</b-button>
+              </div>
               <vue-bootstrap-typeahead
-                size="sm"
                 v-model="query"
                 :data="autocomplete"
                 placeholder="Search a document..."
-                @hit="data_number = autocomplete.indexOf($event) + 1; context_number = 1"
+                @hit="data_number = autocomplete.indexOf($event); context_number = 0"
               />
             </b-nav-form>
             <b-nav-item right>
               <!-- v-on:click="delete_empty_document()" v-download-data:type="'text/json'" -->
               <b-button
-                :size="'sm'"
                 :variant="'primary'"
                 v-download-data="valid_json"
                 v-download-data:filename="'export.json'"
@@ -35,11 +39,12 @@
       </b-navbar>
     </div>
     <br>
-    <div v-if="data_number - 1 < json.data.length">
-      <h2>{{ json.data[data_number - 1].title }}</h2>
+
+    <div>
+      <h2>{{ json.data[data_number].title }}</h2>
       <span
         class="text-muted"
-      >Paragraph {{ context_number }} of {{ json.data[data_number - 1].paragraphs.length }} | Document {{ data_number }} of {{ json.data.length }}</span>
+      >Paragraph {{ context_number+1 }} of {{ json.data[data_number].paragraphs.length }} | Document {{ data_number+1 }} of {{ json.data.length }}</span>
       <br>
       <br>
 
@@ -55,9 +60,10 @@
       <b-form-input v-model="answer_start" type="text" disabled placeholder="answer start position..."></b-form-input>
       <br>
 
-      <b-button :size="''" :variant="'secondary'" v-on:click="addAnnotation()">Add annotation</b-button> or 
+      <b-button :size="''" :variant="'secondary'" v-on:click="addAnnotation()">Add annotation</b-button>
+      <!--
       <b-button
-        v-if="context_number < json.data[data_number - 1].paragraphs.length"
+        v-if="context_number < json.data[data_number].paragraphs.length"
         :size="''"
         :variant="'danger'"
         v-on:click="delete_paragraph()"
@@ -66,8 +72,9 @@
         v-else
         :size="''"
         :variant="'danger'"
-        v-on:click="delete_paragraph(), data_number += 1, context_number = 1"
+        v-on:click="delete_paragraph(), data_number += 1, context_number = 0"
       >Delete paragraph</b-button>
+      -->
       <br>
       <br>
 
@@ -78,39 +85,6 @@
       </b-table>
       <br>
 
-      <div v-if="data_number > 1 && context_number == 1">
-        <b-button
-          :size="''"
-          :variant="'outline-secondary'"
-          v-on:click="data_number -= 1, context_number = json.data[data_number - 1].paragraphs.length"
-        >Previous</b-button> or 
-        <b-button :size="''" :variant="'outline-primary'" v-on:click="context_number += 1">Next</b-button>
-      </div>
-      <div v-else-if="context_number < json.data[data_number - 1].paragraphs.length">
-        <b-button
-          :size="''"
-          :variant="'outline-secondary'"
-          v-on:click="context_number -= 1"
-        >Previous</b-button> or 
-        <b-button :size="''" :variant="'outline-primary'" v-on:click="context_number += 1">Next</b-button>
-      </div>
-      <div v-else>
-        <b-button
-          :size="''"
-          :variant="'outline-secondary'"
-          v-on:click="context_number -= 1"
-        >Previous</b-button> or 
-        <b-button
-          :size="''"
-          :variant="'outline-primary'"
-          v-on:click="data_number += 1, context_number = 1"
-        >Next</b-button>
-      </div>
-      <br>
-      <br>
-    </div>
-    <div v-else>
-      There are no more data to annotate. You can now download your annotated dataset
     </div>
   </div>
 </template>
@@ -124,8 +98,8 @@ export default {
   props: ["json"],
   data: function() {
     return {
-      data_number: 1,
-      context_number: 1,
+      data_number: 0,
+      context_number: 0,
       question: "",
       answer: "",
       answer_start: "",
@@ -135,7 +109,7 @@ export default {
   },
   methods: {
     addAnnotation: function() {
-      var paragraph_container = this.json.data[this.data_number - 1].paragraphs[
+      var paragraph_container = this.json.data[this.data_number].paragraphs[
         this.context_number - 1
       ];
       var qa = {
@@ -148,9 +122,7 @@ export default {
       this.answer = "";
     },
     deleteAnnotation: function(row_index) {
-      var paragraph_container = this.json.data[this.data_number - 1].paragraphs[
-        this.context_number - 1
-      ];
+      var paragraph_container = this.json.data[this.data_number].paragraphs[this.context_number];
       paragraph_container.qas.splice(row_index, 1);
     },
     getSelection: function() {
@@ -159,14 +131,28 @@ export default {
       this.answer = selection.toString();
     },
     delete_paragraph: function() {
-      var paragraph_container = this.json.data[this.data_number - 1].paragraphs;
-      paragraph_container.splice([this.context_number - 1], 1);
+      var paragraph_container = this.json.data[this.data_number].paragraphs;
+      paragraph_container.splice([this.context_number], 1);
     },
     delete_empty_document: function() {
       for (var i in this.json.data) {
         if (this.json.data[i].paragraphs.length == 0) {
           this.json.data.splice(i, 1);
         }
+      }
+    },
+    next: function() {
+      this.context_number += 1;
+      if (this.context_number >= this.json.data[this.data_number].paragraphs.length) {
+        this.context_number = 0;
+        if (this.data_number < this.json.data.length-1) this.data_number += 1;
+      }
+    },
+    prev: function() {
+      this.context_number -= 1;
+      if (this.context_number <= 0) {
+        this.context_number = 0;
+        if (this.data_number > 0) this.data_number -= 1;
       }
     }
   },
@@ -186,9 +172,7 @@ export default {
       return idx;
     },
     items: function() {
-      var paragraph_container = this.json.data[this.data_number - 1].paragraphs[
-        this.context_number - 1
-      ];
+      var paragraph_container = this.json.data[this.data_number].paragraphs[this.context_number];
       var items = [];
       for (var i = 0; i < paragraph_container.qas.length; i++) {
         var item = {
@@ -200,9 +184,7 @@ export default {
       return items;
     },
     paragraph_context: function() {
-      return this.json.data[this.data_number - 1].paragraphs[
-        this.context_number - 1
-      ].context;
+      return this.json.data[this.data_number].paragraphs[this.context_number].context;
     },
     options() {
       return {
