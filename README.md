@@ -25,8 +25,8 @@ npm run serve
 
 ## Docker
 ```
-docker build . -t cdqa-annotator
-docker run cdqa-annotator -p 8080:8080
+docker build -t cdqa-annotator .
+docker run -p 8080:8080 cdqa-annotator
 ```
 
 The app should be running at http://localhost:8080/
